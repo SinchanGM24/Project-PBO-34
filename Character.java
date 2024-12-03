@@ -93,4 +93,20 @@ public class Character {
     public int getStrength() { return strength; }
     public int getIntelligence() { return intelligence; }
     public String getName() { return name; }
+
+    public void setStrength(int strength){
+        this.strength = strength;
+    }
+
+    public void setIntelligence(int intelligence){
+        this.intelligence = intelligence;
+    }
+
+    public void setEnergy(int energy){
+        this.energy = energy;
+    }
+
+    public void setFullness(int fullness){
+        this.fullness = fullness;
+    }
 }

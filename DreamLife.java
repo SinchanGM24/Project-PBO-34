@@ -129,7 +129,10 @@ public class DreamLife extends JFrame {
                 character.study();
                 break;
             case "Exercise":
-                character.exercise();
+                character.setStrength(character.getStrength() + 1);
+                character.setEnergy(character.getEnergy() - 15);
+                character.setFullness(character.getFullness() - 15);
+                checkStrengthEvent();
                 break;
             case "Play":
                 character.play();
@@ -174,11 +177,11 @@ public class DreamLife extends JFrame {
             System.exit(0);
         }
         if (character.getIntelligence() >= 100) {
-            JOptionPane.showMessageDialog(this, "Congratulations! You became the Smarter in the world");
+            JOptionPane.showMessageDialog(this, "Congratulations! You became the Smartest in the world");
             System.exit(0);
         }
         if (character.getStrength() >= 100) {
-            JOptionPane.showMessageDialog(this, "Congratulations! You became the Strongers in the world");
+            JOptionPane.showMessageDialog(this, "Congratulations! You became the Strongest in the world");
             System.exit(0);
         }
         
@@ -240,6 +243,44 @@ public class DreamLife extends JFrame {
         return false;
     }
     
+    private void showStrengthEvent() {
+        int addedStrength1 = (int) (Math.random() * 5 + 1);
+        int addedIntelligence1 = (int) (Math.random() * 5 + 1);
+        int addedStrength2 = (int) (Math.random() * 5 + 1);
+        int addedIntelligence2 = (int) (Math.random() * 5 + 1);
+
+        String[] options = {
+                "Warrior's Path (+Strength " + addedStrength1 + ", +Intelligence " + addedIntelligence1 + ")",
+                "Strategist's Path (+Strength " + addedStrength2 + ", +Intelligence " + addedIntelligence2 + ")"
+        };
+
+        int choice = JOptionPane.showOptionDialog(
+                null,
+                "You have reached a strength milestone! Choose your reward:\n\n" +
+                        "Option 1: Embrace the path of a warrior, strengthening your body and spirit.\n" +
+                        "Option 2: Pursue the strategist's path, building both strength and intellect.",
+                "Strength Milestone Event",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (choice == 0) {
+            character.setStrength(character.getStrength() + addedStrength1);
+            character.setIntelligence(character.getIntelligence() + addedIntelligence1);
+        } else if (choice == 1) {
+            character.setStrength(character.getStrength() + addedStrength2);
+            character.setIntelligence(character.getIntelligence() + addedIntelligence2);
+        }
+    }
+
+    private void checkStrengthEvent() {
+        if (character.getStrength() % 10 == 0 && character.getStrength() > 0) {
+            showStrengthEvent();
+        }
+    }
+
 
     public static void main(String[] args) {
         new DreamLife();
