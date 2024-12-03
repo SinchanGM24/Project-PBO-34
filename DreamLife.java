@@ -130,10 +130,6 @@ public class DreamLife extends JFrame {
                 checkIntelligenceEvent();
                 break;
             case "Exercise":
-                // character.setStrength(character.getStrength() + 1);
-                // character.setEnergy(character.getEnergy() - 10);
-                // character.setFullness(character.getFullness() - 5);
-                // character.setHappiness(character.getHappiness() - 5);
                 character.exercise();
                 checkStrengthEvent();
                 break;
@@ -244,14 +240,14 @@ public class DreamLife extends JFrame {
     }
 
     private void showIntelligenceEvent() {
+        int addedIntelligence = (int) (Math.random() * 5 + 1);
+        int addedStrength = (int) (Math.random() * 5 + 1);
         int addedIntelligence1 = (int) (Math.random() * 5 + 1);
         int addedStrength1 = (int) (Math.random() * 5 + 1);
-        int addedIntelligence2 = (int) (Math.random() * 5 + 1);
-        int addedStrength2 = (int) (Math.random() * 5 + 1);
 
         String[] options = {
-                "Gain Wisdom (+Intelligence " + addedIntelligence1 + ", +Strength " + addedStrength1 + ")",
-                "Discover Joy (+Intelligence " + addedIntelligence2 + ", +Strenght " + addedStrength2 + ")"
+                "Gain Wisdom (+Intelligence " + addedIntelligence + ", +Strength " + addedStrength + ")",
+                "Discover Joy (+Intelligence " + addedIntelligence1 + ", +Strenght " + addedStrength1 + ")"
         };
 
         int choice = JOptionPane.showOptionDialog(
@@ -267,11 +263,11 @@ public class DreamLife extends JFrame {
                 options[0]);
 
         if (choice == 0) {
+            character.setIntelligence(character.getIntelligence() + addedIntelligence);
+            character.setStrength(character.getStrength() + addedStrength);
+        } else if (choice == 1) {
             character.setIntelligence(character.getIntelligence() + addedIntelligence1);
             character.setStrength(character.getStrength() + addedStrength1);
-        } else if (choice == 1) {
-            character.setIntelligence(character.getIntelligence() + addedIntelligence2);
-            character.setStrength(character.getStrength() + addedStrength2);
         }
     }
 
@@ -282,14 +278,14 @@ public class DreamLife extends JFrame {
     }
 
     private void showStrengthEvent() {
+        int addedStrength = (int) (Math.random() * 5 + 1);
+        int addedIntelligence = (int) (Math.random() * 5 + 1);
         int addedStrength1 = (int) (Math.random() * 5 + 1);
         int addedIntelligence1 = (int) (Math.random() * 5 + 1);
-        int addedStrength2 = (int) (Math.random() * 5 + 1);
-        int addedIntelligence2 = (int) (Math.random() * 5 + 1);
 
         String[] options = {
-                "Warrior's Path (+Strength " + addedStrength1 + ", +Intelligence " + addedIntelligence1 + ")",
-                "Strategist's Path (+Strength " + addedStrength2 + ", +Intelligence " + addedIntelligence2 + ")"
+                "Warrior's Path (+Strength " + addedStrength + ", +Intelligence " + addedIntelligence + ")",
+                "Strategist's Path (+Strength " + addedStrength1 + ", +Intelligence " + addedIntelligence1 + ")"
         };
 
         int choice = JOptionPane.showOptionDialog(
@@ -305,11 +301,11 @@ public class DreamLife extends JFrame {
                 options[0]);
 
         if (choice == 0) {
+            character.setStrength(character.getStrength() + addedStrength);
+            character.setIntelligence(character.getIntelligence() + addedIntelligence);
+        } else if (choice == 1) {
             character.setStrength(character.getStrength() + addedStrength1);
             character.setIntelligence(character.getIntelligence() + addedIntelligence1);
-        } else if (choice == 1) {
-            character.setStrength(character.getStrength() + addedStrength2);
-            character.setIntelligence(character.getIntelligence() + addedIntelligence2);
         }
     }
 
