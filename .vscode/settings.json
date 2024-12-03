@@ -1,0 +1,6 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "d:\\filewahyu\\kuliahs5\\praktikum pbo\\modul-4-jurnal-WAHYUSEPTIANWIBOWO\\Driver\\mysql-connector-j-9.1.0.jar"
+    ]
+}
