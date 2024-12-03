@@ -69,7 +69,7 @@ public class Character {
         happiness = 100;
         strength = 0;
         intelligence = 0;
-    
+
         // Simpan nilai awal ke database
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/game_db", "root", "")) {
             String query = "UPDATE users SET energy = ?, fullness = ?, happiness = ?, strength = ?, intelligence = ? WHERE username = ?";
@@ -85,12 +85,48 @@ public class Character {
             System.out.println("Failed to reset character: " + e.getMessage());
         }
     }
-    
 
-    public int getEnergy() { return energy; }
-    public int getFullness() { return fullness; }
-    public int getHappiness() { return happiness; }
-    public int getStrength() { return strength; }
-    public int getIntelligence() { return intelligence; }
-    public String getName() { return name; }
+    public int getEnergy() {
+        return energy;
+    }
+
+    public int getFullness() {
+        return fullness;
+    }
+
+    public int getHappiness() {
+        return happiness;
+    }
+
+    public int getStrength() {
+        return strength;
+    }
+
+    public int getIntelligence() {
+        return intelligence;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setStrength(int strength) {
+        this.strength = strength;
+    }
+
+    public void setIntelligence(int intelligence) {
+        this.intelligence = intelligence;
+    }
+
+    public void setHappiness(int happiness) {
+        this.happiness = happiness;
+    }
+
+    public void setEnergy(int energy) {
+        this.energy = energy;
+    }
+
+    public void setFullness(int fullness) {
+        this.fullness = fullness;
+    }
 }

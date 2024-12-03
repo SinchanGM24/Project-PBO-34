@@ -127,9 +127,15 @@ public class DreamLife extends JFrame {
         switch (action) {
             case "Study":
                 character.study();
+                checkIntelligenceEvent();
                 break;
             case "Exercise":
+                // character.setStrength(character.getStrength() + 1);
+                // character.setEnergy(character.getEnergy() - 10);
+                // character.setFullness(character.getFullness() - 5);
+                // character.setHappiness(character.getHappiness() - 5);
                 character.exercise();
+                checkStrengthEvent();
                 break;
             case "Play":
                 character.play();
@@ -170,18 +176,19 @@ public class DreamLife extends JFrame {
             System.exit(0);
         }
         if (character.getStrength() >= 100 && character.getIntelligence() >= 100) {
-            JOptionPane.showMessageDialog(this, "Congratulations! You became the ultimate hero, excelling in both strength and intelligence!");
+            JOptionPane.showMessageDialog(this,
+                    "Congratulations! You became the ultimate hero, excelling in both strength and intelligence!");
             System.exit(0);
         }
         if (character.getIntelligence() >= 100) {
-            JOptionPane.showMessageDialog(this, "Congratulations! You became the Smarter in the world");
+            JOptionPane.showMessageDialog(this, "Congratulations! You became the Smartest in the world");
             System.exit(0);
         }
         if (character.getStrength() >= 100) {
-            JOptionPane.showMessageDialog(this, "Congratulations! You became the Strongers in the world");
+            JOptionPane.showMessageDialog(this, "Congratulations! You became the Strongest in the world");
             System.exit(0);
         }
-        
+
     }
 
     private boolean showLoginScreen() {
@@ -195,12 +202,11 @@ public class DreamLife extends JFrame {
         loginPanel.add(passwordField);
 
         int option = JOptionPane.showConfirmDialog(
-            null,
-            loginPanel,
-            "Login to DreamLife",
-            JOptionPane.OK_CANCEL_OPTION,
-            JOptionPane.PLAIN_MESSAGE
-        );
+                null,
+                loginPanel,
+                "Login to DreamLife",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
 
         if (option == JOptionPane.OK_OPTION) {
             String username = usernameField.getText();
@@ -211,9 +217,7 @@ public class DreamLife extends JFrame {
             return false;
         }
     }
-    
 
-    
     private boolean authenticate(String username, String password) {
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/game_db", "root", "")) {
             String query = "SELECT * FROM users WHERE username = ? AND password = ?";
@@ -225,13 +229,12 @@ public class DreamLife extends JFrame {
             if (rs.next()) {
                 // Muat data atribut karakter
                 character = new Character(
-                    rs.getString("username"), 
-                    rs.getInt("energy"), 
-                    rs.getInt("fullness"), 
-                    rs.getInt("happiness"), 
-                    rs.getInt("strength"), 
-                    rs.getInt("intelligence")
-                );
+                        rs.getString("username"),
+                        rs.getInt("energy"),
+                        rs.getInt("fullness"),
+                        rs.getInt("happiness"),
+                        rs.getInt("strength"),
+                        rs.getInt("intelligence"));
                 return true;
             }
         } catch (SQLException e) {
@@ -239,7 +242,82 @@ public class DreamLife extends JFrame {
         }
         return false;
     }
-    
+
+    private void showIntelligenceEvent() {
+        int addedIntelligence1 = (int) (Math.random() * 5 + 1);
+        int addedStrength1 = (int) (Math.random() * 5 + 1);
+        int addedIntelligence2 = (int) (Math.random() * 5 + 1);
+        int addedStrength2 = (int) (Math.random() * 5 + 1);
+
+        String[] options = {
+                "Gain Wisdom (+Intelligence " + addedIntelligence1 + ", +Strength " + addedStrength1 + ")",
+                "Discover Joy (+Intelligence " + addedIntelligence2 + ", +Strenght " + addedStrength2 + ")"
+        };
+
+        int choice = JOptionPane.showOptionDialog(
+                null,
+                "You have reached an intelligence milestone! Choose your reward:\n\n" +
+                        "Option 1: Delve into ancient texts, gaining wisdom and physical endurance.\n" +
+                        "Option 2: Explore life's joys, expanding your intellect and Strenght.",
+                "Intelligence Milestone Event",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (choice == 0) {
+            character.setIntelligence(character.getIntelligence() + addedIntelligence1);
+            character.setStrength(character.getStrength() + addedStrength1);
+        } else if (choice == 1) {
+            character.setIntelligence(character.getIntelligence() + addedIntelligence2);
+            character.setStrength(character.getStrength() + addedStrength2);
+        }
+    }
+
+    private void checkIntelligenceEvent() {
+        if (character.getIntelligence() % 10 == 0 && character.getIntelligence() > 0) {
+            showIntelligenceEvent();
+        }
+    }
+
+    private void showStrengthEvent() {
+        int addedStrength1 = (int) (Math.random() * 5 + 1);
+        int addedIntelligence1 = (int) (Math.random() * 5 + 1);
+        int addedStrength2 = (int) (Math.random() * 5 + 1);
+        int addedIntelligence2 = (int) (Math.random() * 5 + 1);
+
+        String[] options = {
+                "Warrior's Path (+Strength " + addedStrength1 + ", +Intelligence " + addedIntelligence1 + ")",
+                "Strategist's Path (+Strength " + addedStrength2 + ", +Intelligence " + addedIntelligence2 + ")"
+        };
+
+        int choice = JOptionPane.showOptionDialog(
+                null,
+                "You have reached a strength milestone! Choose your reward:\n\n" +
+                        "Option 1: Embrace the path of a warrior, strengthening your body and spirit.\n" +
+                        "Option 2: Pursue the strategist's path, building both strength and intellect.",
+                "Strength Milestone Event",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (choice == 0) {
+            character.setStrength(character.getStrength() + addedStrength1);
+            character.setIntelligence(character.getIntelligence() + addedIntelligence1);
+        } else if (choice == 1) {
+            character.setStrength(character.getStrength() + addedStrength2);
+            character.setIntelligence(character.getIntelligence() + addedIntelligence2);
+        }
+    }
+
+    private void checkStrengthEvent() {
+        if (character.getStrength() % 10 == 0 && character.getStrength() > 0) {
+            showStrengthEvent();
+        }
+    }
 
     public static void main(String[] args) {
         new DreamLife();
