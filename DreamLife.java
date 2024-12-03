@@ -2,156 +2,246 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DreamLife extends JFrame {
-    private Character character = new Character();
-    private JLabel lblEnergy, lblFullness, lblHappiness, lblIntelligence, lblStrength;
-    private JProgressBar progressBarEnergy, progressBarFullness, progressBarHappiness, progressBarIntelligence, progressBarStrength;
+
+    private Character character;
+    private JProgressBar energyBar, fullnessBar, happinessBar, strengthBar, intelligenceBar;
 
     public DreamLife() {
-        setTitle("DreamLife: The Path You Choose");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(500, 500); // Perbesar ukuran agar semua elemen terlihat
-        setLayout(new GridLayout(7, 1)); // Tambah baris untuk tampilan Strength dan Intelligence
+        // Hanya memulai game jika login berhasil
+        if (showLoginScreen()) {
+            if (character == null) {
+                JOptionPane.showMessageDialog(this, "Error loading character data. Exiting game.");
+                System.exit(0);
+            }
 
-        // Panel Status
-        JPanel panelStatus = new JPanel(new GridLayout(5, 2)); // 5 atribut sekarang
-        lblEnergy = new JLabel("Energy: " + character.getEnergy());
-        lblFullness = new JLabel("Fullness: " + character.getFullness());
-        lblHappiness = new JLabel("Happiness: " + character.getHappiness());
-        lblIntelligence = new JLabel("Intelligence: " + character.getIntelligence());
-        lblStrength = new JLabel("Strength: " + character.getStrength());
+            // Frame setup
+            setTitle("DreamLife");
+            setDefaultCloseOperation(EXIT_ON_CLOSE);
+            setExtendedState(JFrame.MAXIMIZED_BOTH);
+            setLayout(new BorderLayout());
+            setLocationRelativeTo(null);
 
-        progressBarEnergy = new JProgressBar(0, 100);
-        progressBarEnergy.setValue(character.getEnergy());
-        progressBarFullness = new JProgressBar(0, 100);
-        progressBarFullness.setValue(character.getFullness());
-        progressBarHappiness = new JProgressBar(0, 100);
-        progressBarHappiness.setValue(character.getHappiness());
-        progressBarIntelligence = new JProgressBar(0, 100);
-        progressBarIntelligence.setValue(character.getIntelligence());
-        progressBarStrength = new JProgressBar(0, 100);
-        progressBarStrength.setValue(character.getStrength());
+            // Center: Character image and stats
+            JPanel centerPanel = new JPanel(new BorderLayout());
 
-        panelStatus.add(lblEnergy);
-        panelStatus.add(progressBarEnergy);
-        panelStatus.add(lblFullness);
-        panelStatus.add(progressBarFullness);
-        panelStatus.add(lblHappiness);
-        panelStatus.add(progressBarHappiness);
-        panelStatus.add(lblIntelligence);
-        panelStatus.add(progressBarIntelligence);
-        panelStatus.add(lblStrength);
-        panelStatus.add(progressBarStrength);
-        add(panelStatus);
+            // Daftar gambar untuk animasi
+            List<ImageIcon> slimeImages = new ArrayList<>();
+            for (int i = 1; i <= 4; i++) {
+                slimeImages.add(new ImageIcon("Slime/Slime" + i + ".png"));
+            }
 
-        // Panel Tombol Aktivitas
-        JPanel panelActions = new JPanel(new GridLayout(2, 3));
-        JButton btnStudy = new JButton("Study");
-        JButton btnExercise = new JButton("Exercise");
-        JButton btnPlay = new JButton("Play");
-        JButton btnEat = new JButton("Eat");
-        JButton btnSleep = new JButton("Sleep");
+            // Label untuk menampilkan gambar
+            JLabel characterImage = new JLabel();
+            characterImage.setHorizontalAlignment(SwingConstants.CENTER);
+            centerPanel.add(characterImage, BorderLayout.CENTER);
 
-        btnStudy.addActionListener(e -> performActivity("study"));
-        btnExercise.addActionListener(e -> performActivity("exercise"));
-        btnPlay.addActionListener(e -> performActivity("play"));
-        btnEat.addActionListener(e -> performActivity("eat"));
-        btnSleep.addActionListener(e -> performActivity("sleep"));
+            // Thread untuk mengganti gambar secara berurutan
+            Thread animationThread = new Thread(() -> {
+                int index = 0;
+                while (true) {
+                    // Ganti gambar
+                    characterImage.setIcon(slimeImages.get(index));
 
-        panelActions.add(btnStudy);
-        panelActions.add(btnExercise);
-        panelActions.add(btnPlay);
-        panelActions.add(btnEat);
-        panelActions.add(btnSleep);
-        add(panelActions);
+                    // Update indeks untuk gambar berikutnya
+                    index = (index + 1) % slimeImages.size(); // Loop kembali ke gambar pertama setelah gambar terakhir
 
-        // Start game time
-        Thread gameThread = new Thread(new GameTime());
-        gameThread.start();
+                    try {
+                        Thread.sleep(300); // Delay antara gambar (300ms)
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            animationThread.start(); // Mulai animasi
+            // Stats section
+            JPanel statsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+
+            energyBar = createProgressBar("Energy", character.getEnergy());
+            fullnessBar = createProgressBar("Fullness", character.getFullness());
+            happinessBar = createProgressBar("Happiness", character.getHappiness());
+            strengthBar = createProgressBar("Strength", character.getStrength());
+            intelligenceBar = createProgressBar("Intelligence", character.getIntelligence());
+
+            statsPanel.add(createStatPanel("Energy", energyBar));
+            statsPanel.add(createStatPanel("Strength", strengthBar));
+            statsPanel.add(createStatPanel("Fullness", fullnessBar));
+            statsPanel.add(createStatPanel("Intelligence", intelligenceBar));
+            statsPanel.add(createStatPanel("Happiness", happinessBar));
+            statsPanel.add(new JLabel()); // Empty placeholder for layout symmetry
+
+            centerPanel.add(statsPanel, BorderLayout.SOUTH);
+            add(centerPanel, BorderLayout.CENTER);
+
+            // Footer: Action buttons
+            JPanel buttonPanel = new JPanel(new GridLayout(2, 3, 10, 10));
+            addGameButton(buttonPanel, "Study");
+            addGameButton(buttonPanel, "Exercise");
+            addGameButton(buttonPanel, "Play");
+            addGameButton(buttonPanel, "Eat");
+            addGameButton(buttonPanel, "Sleep");
+            addGameButton(buttonPanel, "Exit");
+
+            add(buttonPanel, BorderLayout.SOUTH);
+
+            setVisible(true);
+        }
     }
 
-    private void performActivity(String action) {
+    private JPanel createStatPanel(String name, JProgressBar progressBar) {
+        JPanel panel = new JPanel(new BorderLayout());
+        JLabel label = new JLabel(name, JLabel.CENTER);
+        panel.add(label, BorderLayout.NORTH);
+        panel.add(progressBar, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JProgressBar createProgressBar(String name, int value) {
+        JProgressBar progressBar = new JProgressBar(0, 100);
+        progressBar.setValue(value);
+        return progressBar;
+    }
+
+    private void addGameButton(JPanel panel, String action) {
+        JButton button = new JButton(action);
+        panel.add(button);
+
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                performAction(action);
+            }
+        });
+    }
+
+    private void performAction(String action) {
         switch (action) {
-            case "study":
-                character.setIntelligence(character.getIntelligence() + 10);
-                character.setEnergy(character.getEnergy() - 20);
-                character.setFullness(character.getFullness() - 10); // Mengurangi kenyang
+            case "Study":
+                character.study();
                 break;
-            case "exercise":
-                character.setStrength(character.getStrength() + 10);
-                character.setEnergy(character.getEnergy() - 15);
-                character.setFullness(character.getFullness() - 15); // Mengurangi kenyang
+            case "Exercise":
+                character.exercise();
                 break;
-            case "play":
-                character.setHappiness(character.getHappiness() + 20);
-                character.setEnergy(character.getEnergy() - 10);
-                character.setFullness(character.getFullness() - 5); // Sedikit mengurangi kenyang
+            case "Play":
+                character.play();
                 break;
-            case "eat":
-                character.setFullness(character.getFullness() + 30); // Menambah kenyang
-                character.setEnergy(character.getEnergy() + 10);
+            case "Eat":
+                character.eat();
                 break;
-            case "sleep":
-                character.setEnergy(character.getEnergy() + 30);
+            case "Sleep":
+                character.sleep();
+                break;
+            case "Exit":
+                System.exit(0);
                 break;
         }
-        checkGameOver();
+
+        updateStats();
+        character.saveToDatabase(); // Simpan perubahan ke database
         checkEnding();
-        updateStatus();
     }
 
-    private void checkGameOver() {
-        if (character.getFullness() <= 0 || character.getEnergy() <= 0) {
-            JOptionPane.showMessageDialog(this, "Game Over! You starved or ran out of energy.");
-            System.exit(0);
-        }
+    private void updateStats() {
+        energyBar.setValue(character.getEnergy());
+        fullnessBar.setValue(character.getFullness());
+        happinessBar.setValue(character.getHappiness());
+        strengthBar.setValue(character.getStrength());
+        intelligenceBar.setValue(character.getIntelligence());
     }
 
     private void checkEnding() {
+        if (character.getEnergy() <= 0) {
+            character.resetCharacter();
+            JOptionPane.showMessageDialog(this, "You worked too hard and collapsed. Game Over!");
+            System.exit(0);
+        }
+        if (character.getHappiness() <= 0) {
+            character.resetCharacter();
+            JOptionPane.showMessageDialog(this, "You lost all joy in life. Game Over!");
+            System.exit(0);
+        }
+        if (character.getStrength() >= 100 && character.getIntelligence() >= 100) {
+            JOptionPane.showMessageDialog(this, "Congratulations! You became the ultimate hero, excelling in both strength and intelligence!");
+            System.exit(0);
+        }
         if (character.getIntelligence() >= 100) {
-            JOptionPane.showMessageDialog(this, "Congratulations! You became a Professor!");
-            System.exit(0);
-        } else if (character.getStrength() >= 100) {
-            JOptionPane.showMessageDialog(this, "Congratulations! You became an Athlete!");
+            JOptionPane.showMessageDialog(this, "Congratulations! You became the Smarter in the world");
             System.exit(0);
         }
+        if (character.getStrength() >= 100) {
+            JOptionPane.showMessageDialog(this, "Congratulations! You became the Strongers in the world");
+            System.exit(0);
+        }
+        
     }
 
-    private void updateStatus() {
-        lblEnergy.setText("Energy: " + character.getEnergy());
-        lblFullness.setText("Fullness: " + character.getFullness());
-        lblHappiness.setText("Happiness: " + character.getHappiness());
-        lblIntelligence.setText("Intelligence: " + character.getIntelligence());
-        lblStrength.setText("Strength: " + character.getStrength());
+    private boolean showLoginScreen() {
+        JPanel loginPanel = new JPanel(new GridLayout(3, 2));
+        JTextField usernameField = new JTextField();
+        JPasswordField passwordField = new JPasswordField();
 
-        progressBarEnergy.setValue(character.getEnergy());
-        progressBarFullness.setValue(character.getFullness());
-        progressBarHappiness.setValue(character.getHappiness());
-        progressBarIntelligence.setValue(character.getIntelligence());
-        progressBarStrength.setValue(character.getStrength());
+        loginPanel.add(new JLabel("Username:"));
+        loginPanel.add(usernameField);
+        loginPanel.add(new JLabel("Password:"));
+        loginPanel.add(passwordField);
+
+        int option = JOptionPane.showConfirmDialog(
+            null,
+            loginPanel,
+            "Login to DreamLife",
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (option == JOptionPane.OK_OPTION) {
+            String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
+            return authenticate(username, password);
+        } else {
+            System.exit(0);
+            return false;
+        }
     }
+    
 
-    class GameTime implements Runnable {
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    Thread.sleep(1000); // Update setiap detik
-                    character.setFullness(character.getFullness() - 1); // Berkurang setiap detik
-                    checkGameOver();
-                    updateStatus();
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace();
-                }
+    
+    private boolean authenticate(String username, String password) {
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/game_db", "root", "")) {
+            String query = "SELECT * FROM users WHERE username = ? AND password = ?";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                // Muat data atribut karakter
+                character = new Character(
+                    rs.getString("username"), 
+                    rs.getInt("energy"), 
+                    rs.getInt("fullness"), 
+                    rs.getInt("happiness"), 
+                    rs.getInt("strength"), 
+                    rs.getInt("intelligence")
+                );
+                return true;
             }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Database error: " + e.getMessage());
         }
+        return false;
     }
+    
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            DreamLife game = new DreamLife();
-            game.setVisible(true);
-        });
+        new DreamLife();
     }
 }
