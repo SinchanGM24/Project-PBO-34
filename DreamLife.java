@@ -1,7 +1,10 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -9,11 +12,23 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.awt.image.BufferedImage;
 
 public class DreamLife extends JFrame {
 
     private Character character;
     private JProgressBar energyBar, fullnessBar, happinessBar, strengthBar, intelligenceBar;
+    
+    private List<ImageIcon> defaultFrames = new ArrayList<>();
+    private List<ImageIcon> highStrength20Frames = new ArrayList<>();
+    private List<ImageIcon> highIntelligence20Frames = new ArrayList<>();
+    private List<ImageIcon> highStrength40Frames = new ArrayList<>();
+    private List<ImageIcon> highIntelligence40Frames = new ArrayList<>();
+    private List<ImageIcon> highStrength60Frames = new ArrayList<>();
+    private List<ImageIcon> highIntelligence60Frames = new ArrayList<>();
+    private List<ImageIcon> highStrength80Frames = new ArrayList<>();
+    private List<ImageIcon> highIntelligence80Frames = new ArrayList<>();
+    private List<ImageIcon> currentFrames;
 
     public DreamLife() {
         // Hanya memulai game jika login berhasil
@@ -32,37 +47,45 @@ public class DreamLife extends JFrame {
 
             // Center: Character image and stats
             JPanel centerPanel = new JPanel(new BorderLayout());
+            add(centerPanel, BorderLayout.CENTER);
 
-            // Daftar gambar untuk animasi
-            List<ImageIcon> slimeImages = new ArrayList<>();
-            for (int i = 1; i <= 4; i++) {
-                slimeImages.add(new ImageIcon("Slime/Slime" + i + ".png"));
-            }
-
-            // Label untuk menampilkan gambar
+            // Label untuk menampilkan gambar animasi
             JLabel characterImage = new JLabel();
             characterImage.setHorizontalAlignment(SwingConstants.CENTER);
             centerPanel.add(characterImage, BorderLayout.CENTER);
 
-            // Thread untuk mengganti gambar secara berurutan
+            // List untuk menyimpan frame animasi
+            try {
+                loadFrames(defaultFrames, "idel.png", 10);
+                loadFrames(highStrength20Frames, "idel2.png", 10);
+                loadFrames(highIntelligence20Frames, "idel2.png", 10);
+                loadFrames(highStrength40Frames, "idel3.png", 10);
+                loadFrames(highIntelligence40Frames, "idel3.png", 10);
+                loadFrames(highStrength60Frames, "idel4.png", 10);
+                loadFrames(highIntelligence60Frames, "idel4.png", 10);
+                loadFrames(highStrength80Frames, "idel5.png", 10);
+                loadFrames(highIntelligence80Frames, "idel6.png", 10);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            currentFrames = defaultFrames;
+
             Thread animationThread = new Thread(() -> {
                 int index = 0;
                 while (true) {
-                    // Ganti gambar
-                    characterImage.setIcon(slimeImages.get(index));
-
-                    // Update indeks untuk gambar berikutnya
-                    index = (index + 1) % slimeImages.size(); // Loop kembali ke gambar pertama setelah gambar terakhir
+                    updateCurrentFrames();
+                    characterImage.setIcon(currentFrames.get(index));
+                    index = (index + 1) % currentFrames.size();
 
                     try {
-                        Thread.sleep(300); // Delay antara gambar (300ms)
+                        Thread.sleep(130);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
             });
-
-            animationThread.start(); // Mulai animasi
+            animationThread.start();
             // Stats section
             JPanel statsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
 
@@ -96,7 +119,46 @@ public class DreamLife extends JFrame {
             setVisible(true);
         }
     }
+    private void loadFrames(List<ImageIcon> frames, String filePath, int frameCount) throws IOException {
+        BufferedImage spriteSheet = ImageIO.read(new File(filePath));
+        int frameWidth = spriteSheet.getWidth() / frameCount;
+        int frameHeight = spriteSheet.getHeight();
+        int scaledWidth = frameWidth * 4;
+        int scaledHeight = frameHeight * 4;
 
+        for (int i = 0; i < frameCount; i++) {
+            BufferedImage frame = spriteSheet.getSubimage(i * frameWidth, 0, frameWidth, frameHeight);
+            Image scaledImage = frame.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_SMOOTH);
+            frames.add(new ImageIcon(scaledImage));
+        }
+    }
+
+    private void updateCurrentFrames() {
+        int strength = character.getStrength();
+        int intelligence = character.getIntelligence();
+    
+        // Prioritaskan kondisi tertinggi terlebih dahulu
+        if (strength > 80) {
+            currentFrames = highStrength80Frames;
+        } else if (strength > 60) {
+            currentFrames = highStrength60Frames;
+        } else if (strength > 40) {
+            currentFrames = highStrength40Frames;
+        } else if (strength > 20) {
+            currentFrames = highStrength20Frames;
+        } else if (intelligence > 80) {
+            currentFrames = highIntelligence80Frames;
+        } else if (intelligence > 60) {
+            currentFrames = highIntelligence60Frames;
+        } else if (intelligence > 40) {
+            currentFrames = highIntelligence40Frames;
+        } else if (intelligence > 20) {
+            currentFrames = highIntelligence20Frames;
+        } else {
+            currentFrames = defaultFrames;
+        }
+    }
+    
     private JPanel createStatPanel(String name, JProgressBar progressBar) {
         JPanel panel = new JPanel(new BorderLayout());
         JLabel label = new JLabel(name, JLabel.CENTER);
@@ -172,48 +234,77 @@ public class DreamLife extends JFrame {
             System.exit(0);
         }
         if (character.getStrength() >= 100 && character.getIntelligence() >= 100) {
-            JOptionPane.showMessageDialog(this,
-                    "Congratulations! You became the ultimate hero, excelling in both strength and intelligence!");
+            JOptionPane.showMessageDialog(this, "Congratulations! You became the ultimate hero, excelling in both strength and intelligence!");
             System.exit(0);
         }
         if (character.getIntelligence() >= 100) {
-            JOptionPane.showMessageDialog(this, "Congratulations! You became the Smartest in the world");
+            character.resetCharacter();
+            JOptionPane.showMessageDialog(this, "Congratulations! You became the Smarter in the world");
             System.exit(0);
         }
         if (character.getStrength() >= 100) {
-            JOptionPane.showMessageDialog(this, "Congratulations! You became the Strongest in the world");
+            character.resetCharacter();
+            JOptionPane.showMessageDialog(this, "Congratulations! You became the Strongers in the world");
             System.exit(0);
         }
-
+        
     }
 
     private boolean showLoginScreen() {
-        JPanel loginPanel = new JPanel(new GridLayout(3, 2));
-        JTextField usernameField = new JTextField();
-        JPasswordField passwordField = new JPasswordField();
-
-        loginPanel.add(new JLabel("Username:"));
-        loginPanel.add(usernameField);
-        loginPanel.add(new JLabel("Password:"));
-        loginPanel.add(passwordField);
-
-        int option = JOptionPane.showConfirmDialog(
+        while (true) { // Loop hingga login berhasil atau pengguna menutup dialog
+            JPanel loginPanel = new JPanel(new GridLayout(3, 2));
+            JTextField usernameField = new JTextField();
+            JPasswordField passwordField = new JPasswordField();
+    
+            loginPanel.add(new JLabel("Username:"));
+            loginPanel.add(usernameField);
+            loginPanel.add(new JLabel("Password:"));
+            loginPanel.add(passwordField);
+    
+            int option = JOptionPane.showConfirmDialog(
                 null,
                 loginPanel,
                 "Login to DreamLife",
                 JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE);
-
-        if (option == JOptionPane.OK_OPTION) {
-            String username = usernameField.getText();
-            String password = new String(passwordField.getPassword());
-            return authenticate(username, password);
-        } else {
-            System.exit(0);
-            return false;
+                JOptionPane.PLAIN_MESSAGE
+            );
+    
+            if (option == JOptionPane.OK_OPTION) {
+                String username = usernameField.getText();
+                String password = new String(passwordField.getPassword());
+    
+                // Coba autentikasi
+                if (authenticate(username, password)) {
+                    return true; // Login berhasil
+                } else {
+                    // Tampilkan pesan error jika login gagal
+                    JOptionPane.showMessageDialog(
+                        null,
+                        "Incorrect username or password. Please try again.",
+                        "Login Failed",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            } else {
+                // Jika pengguna menekan tombol Cancel
+                int exitOption = JOptionPane.showConfirmDialog(
+                    null,
+                    "Do you really want to exit?",
+                    "Exit Confirmation",
+                    JOptionPane.YES_NO_OPTION
+                );
+    
+                if (exitOption == JOptionPane.YES_OPTION) {
+                    System.exit(0); // Keluar dari aplikasi
+                }
+            }
         }
     }
+    
 
+    
+
+    
     private boolean authenticate(String username, String password) {
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/game_db", "root", "")) {
             String query = "SELECT * FROM users WHERE username = ? AND password = ?";
@@ -225,12 +316,13 @@ public class DreamLife extends JFrame {
             if (rs.next()) {
                 // Muat data atribut karakter
                 character = new Character(
-                        rs.getString("username"),
-                        rs.getInt("energy"),
-                        rs.getInt("fullness"),
-                        rs.getInt("happiness"),
-                        rs.getInt("strength"),
-                        rs.getInt("intelligence"));
+                    rs.getString("username"), 
+                    rs.getInt("energy"), 
+                    rs.getInt("fullness"), 
+                    rs.getInt("happiness"), 
+                    rs.getInt("strength"), 
+                    rs.getInt("intelligence")
+                );
                 return true;
             }
         } catch (SQLException e) {
@@ -314,6 +406,7 @@ public class DreamLife extends JFrame {
             showStrengthEvent();
         }
     }
+    
 
     public static void main(String[] args) {
         new DreamLife();
