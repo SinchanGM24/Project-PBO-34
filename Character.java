@@ -17,14 +17,14 @@ public class Character {
     }
 
     public void study() {
-        intelligence += 10;
+        intelligence += 1;
         energy -= 5;
         fullness -= 5;
         happiness -= 10;
     }
 
     public void exercise() {
-        strength += 10;
+        strength += 1;
         energy -= 10;
         fullness -= 5;
         happiness -= 5;

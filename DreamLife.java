@@ -18,7 +18,9 @@ public class DreamLife extends JFrame {
 
     private Character character;
     private JProgressBar energyBar, fullnessBar, happinessBar, strengthBar, intelligenceBar;
-    
+
+    private boolean authenticate = false;
+
     private List<ImageIcon> defaultFrames = new ArrayList<>();
     private List<ImageIcon> highStrength20Frames = new ArrayList<>();
     private List<ImageIcon> highIntelligence20Frames = new ArrayList<>();
@@ -112,13 +114,14 @@ public class DreamLife extends JFrame {
             addGameButton(buttonPanel, "Play");
             addGameButton(buttonPanel, "Eat");
             addGameButton(buttonPanel, "Sleep");
-            addGameButton(buttonPanel, "Exit");
+            addGameButton(buttonPanel, "Log out");
 
             add(buttonPanel, BorderLayout.SOUTH);
 
             setVisible(true);
         }
     }
+
     private void loadFrames(List<ImageIcon> frames, String filePath, int frameCount) throws IOException {
         BufferedImage spriteSheet = ImageIO.read(new File(filePath));
         int frameWidth = spriteSheet.getWidth() / frameCount;
@@ -136,7 +139,7 @@ public class DreamLife extends JFrame {
     private void updateCurrentFrames() {
         int strength = character.getStrength();
         int intelligence = character.getIntelligence();
-    
+
         // Prioritaskan kondisi tertinggi terlebih dahulu
         if (strength > 80) {
             currentFrames = highStrength80Frames;
@@ -158,7 +161,7 @@ public class DreamLife extends JFrame {
             currentFrames = defaultFrames;
         }
     }
-    
+
     private JPanel createStatPanel(String name, JProgressBar progressBar) {
         JPanel panel = new JPanel(new BorderLayout());
         JLabel label = new JLabel(name, JLabel.CENTER);
@@ -204,8 +207,9 @@ public class DreamLife extends JFrame {
             case "Sleep":
                 character.sleep();
                 break;
-            case "Exit":
-                System.exit(0);
+            case "Log out":
+                dispose(); 
+                showLoginScreen();
                 break;
         }
 
@@ -234,7 +238,8 @@ public class DreamLife extends JFrame {
             System.exit(0);
         }
         if (character.getStrength() >= 100 && character.getIntelligence() >= 100) {
-            JOptionPane.showMessageDialog(this, "Congratulations! You became the ultimate hero, excelling in both strength and intelligence!");
+            JOptionPane.showMessageDialog(this,
+                    "Congratulations! You became the ultimate hero, excelling in both strength and intelligence!");
             System.exit(0);
         }
         if (character.getIntelligence() >= 100) {
@@ -247,168 +252,274 @@ public class DreamLife extends JFrame {
             JOptionPane.showMessageDialog(this, "Congratulations! You became the Strongers in the world");
             System.exit(0);
         }
-        
+
     }
 
-    private boolean showLoginScreen() {
-        while (true) { // Loop until login is successful or the user closes the dialog
+    public boolean showLoginScreen() {
+        while (true) {
+            JDialog loginDialog = new JDialog((Frame) null, "LOGIN", true); // Modal dialog
+
             JPanel loginPanel = new JPanel() {
-                // Override paintComponent to set background image
                 protected void paintComponent(Graphics g) {
                     super.paintComponent(g);
                     try {
-                        // Load the custom background image (Replace with your image path)
-                        Image backgroundImage = ImageIO.read(new File("Assets/Background.jpg"));
+                        Image backgroundImage = ImageIO.read(new File("Background.jpg"));
                         g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
                     } catch (IOException e) {
-                        e.printStackTrace(); // Handle error if image is not found
+                        e.printStackTrace();
                     }
                 }
             };
-            loginPanel.setLayout(new GridBagLayout());
+
+            loginPanel.setPreferredSize(new Dimension(500, 300));
+            GridBagLayout layout = new GridBagLayout();
+            loginPanel.setLayout(layout);
             GridBagConstraints gbc = new GridBagConstraints();
             gbc.insets = new Insets(10, 10, 10, 10);
+            gbc.anchor = GridBagConstraints.CENTER;
 
-            // Title label (DreamLife)
             JLabel titleLabel = new JLabel("DreamLife");
             titleLabel.setFont(new Font("Arial", Font.BOLD, 30));
             titleLabel.setForeground(Color.WHITE);
             gbc.gridx = 0;
             gbc.gridy = 0;
             gbc.gridwidth = 2;
-            gbc.anchor = GridBagConstraints.CENTER;
-            loginPanel.add(titleLabel, gbc);
+            layout.setConstraints(titleLabel, gbc);
+            loginPanel.add(titleLabel);
 
-            // Username and password labels and fields
             JLabel usernameLabel = new JLabel("Username:");
             usernameLabel.setForeground(Color.WHITE);
             JTextField usernameField = new JTextField(15);
-            usernameField.setText("Username"); // Set the placeholder text
-            usernameField.setForeground(Color.GRAY); // Set the placeholder text color
-            usernameField.setBackground(new Color(50, 50, 50)); // Dark background color
-            usernameField.setCaretColor(Color.WHITE); // White caret color
-            usernameField.setBorder(BorderFactory.createLineBorder(new Color(100, 100, 100)));
-            usernameField.setFont(new Font("Arial", Font.PLAIN, 14));
-
-            // Remove placeholder text when the user focuses on the field
-            usernameField.addFocusListener(new java.awt.event.FocusAdapter() {
-                public void focusGained(java.awt.event.FocusEvent evt) {
-                    if (usernameField.getText().equals("Username")) {
-                        usernameField.setText(""); // Remove placeholder text
-                        usernameField.setForeground(Color.WHITE); // Change text color to white
-                    }
-                }
-
-                public void focusLost(java.awt.event.FocusEvent evt) {
-                    if (usernameField.getText().isEmpty()) {
-                        usernameField.setText("Username"); // Restore placeholder text if the field is empty
-                        usernameField.setForeground(Color.GRAY); // Change text color to gray
-                    }
-                }
-            });
             JLabel passwordLabel = new JLabel("Password:");
             passwordLabel.setForeground(Color.WHITE);
             JPasswordField passwordField = new JPasswordField(15);
-            passwordField.setText("Password"); // Set the placeholder text
-            passwordField.setForeground(Color.GRAY); // Set the placeholder text color
-            passwordField.setBackground(new Color(50, 50, 50)); // Dark background color
-            passwordField.setCaretColor(Color.WHITE); // White caret color
-            passwordField.setBorder(BorderFactory.createLineBorder(new Color(100, 100, 100)));
-            passwordField.setFont(new Font("Arial", Font.PLAIN, 14));
 
-            // Remove placeholder text when the user focuses on the field
-            passwordField.addFocusListener(new java.awt.event.FocusAdapter() {
-                public void focusGained(java.awt.event.FocusEvent evt) {
-                    if (new String(passwordField.getPassword()).equals("Password")) {
-                        passwordField.setText(""); // Remove placeholder text
-                        passwordField.setForeground(Color.WHITE); // Change text color to white
-                    }
-                }
+            JButton loginButton = new JButton("Login");
+            loginButton.setBackground(new Color(0, 120, 215));
+            loginButton.setForeground(Color.WHITE);
+            JButton registerButton = new JButton("Register");
+            registerButton.setBackground(new Color(0, 120, 215));
+            registerButton.setForeground(Color.WHITE);
 
-                public void focusLost(java.awt.event.FocusEvent evt) {
-                    if (new String(passwordField.getPassword()).isEmpty()) {
-                        passwordField.setText("Password"); // Restore placeholder text if the field is empty
-                        passwordField.setForeground(Color.GRAY); // Change text color to gray
-                    }
-                }
-            });
-
-            // Set the GridBagLayout constraints for each component
+            gbc.gridwidth = 1;
             gbc.gridx = 0;
             gbc.gridy = 1;
-            loginPanel.add(usernameLabel, gbc);
+            layout.setConstraints(usernameLabel, gbc);
+            loginPanel.add(usernameLabel);
 
             gbc.gridx = 1;
-            loginPanel.add(usernameField, gbc);
+            layout.setConstraints(usernameField, gbc);
+            loginPanel.add(usernameField);
 
             gbc.gridx = 0;
             gbc.gridy = 2;
-            loginPanel.add(passwordLabel, gbc);
+            layout.setConstraints(passwordLabel, gbc);
+            loginPanel.add(passwordLabel);
 
             gbc.gridx = 1;
-            loginPanel.add(passwordField, gbc);
+            layout.setConstraints(passwordField, gbc);
+            loginPanel.add(passwordField);
 
-            // Create Login Button with custom styling
-            JButton loginButton = new JButton("Login");
-            loginButton.setBackground(new Color(0, 120, 215));  // Blue color
-            loginButton.setForeground(Color.WHITE);
-            loginButton.setFont(new Font("Arial", Font.BOLD, 14));
-            loginButton.setBorder(BorderFactory.createLineBorder(new Color(0, 100, 180)));
-            loginButton.setPreferredSize(new Dimension(100, 35));
-            loginButton.setFocusPainted(false);
+            // Mengatur ukuran tombol Login dan Register
+            Dimension buttonSize = new Dimension(236, 30); // Ukuran tombol yang seragam
 
-            // Hover effect for the button
-            loginButton.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseEntered(java.awt.event.MouseEvent evt) {
-                    loginButton.setBackground(new Color(0, 100, 180)); // Change color on hover
-                }
+            // Mengatur layout untuk login button (ditempatkan di tengah atas)
+            gbc.gridx = 0;
+            gbc.gridy = 3;
+            gbc.gridwidth = 2; // Tombol akan mengambil dua kolom
+            loginButton.setPreferredSize(buttonSize); // Mengatur ukuran tombol login
+            layout.setConstraints(loginButton, gbc);
+            loginPanel.add(loginButton);
 
-                public void mouseExited(java.awt.event.MouseEvent evt) {
-                    loginButton.setBackground(new Color(0, 120, 215)); // Restore original color
+            // Mengatur layout untuk register button (ditempatkan di tengah bawah)
+            gbc.gridx = 0;
+            gbc.gridy = 4;
+            gbc.gridwidth = 2; // Tombol akan mengambil dua kolom
+            registerButton.setPreferredSize(buttonSize); // Mengatur ukuran tombol register
+            layout.setConstraints(registerButton, gbc);
+            loginPanel.add(registerButton);
+
+            loginDialog.add(loginPanel);
+            loginDialog.pack();
+            loginDialog.setLocationRelativeTo(null);
+
+            // ActionListener untuk tombol Login
+            loginButton.addActionListener(e -> {
+                String username = usernameField.getText();
+                String password = new String(passwordField.getPassword());
+                if (authenticate(username, password)) {
+                    JOptionPane.showMessageDialog(loginDialog, "Login successful!", "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    loginDialog.dispose();
+                    authenticate = true; // Status autentikasi berhasil
+                } else {
+                    JOptionPane.showMessageDialog(loginDialog, "Invalid username or password.", "Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             });
 
+            // ActionListener untuk tombol Register
+            registerButton.addActionListener(e -> {
+                loginDialog.dispose();
+                showRegisterScreen(); // Menampilkan layar registrasi
+            });
 
-            // Show the login dialog
-            int option = JOptionPane.showConfirmDialog(
-                null,
-                loginPanel,
-                "Login to DreamLife",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE
-            );
-
-            if (option == JOptionPane.OK_OPTION) {
-                String username = usernameField.getText();
-                String password = new String(passwordField.getPassword());
-
-                // Authenticate login
-                if (authenticate(username, password)) {
-                    return true; // Successful login
-                } else {
-                    JOptionPane.showMessageDialog(
-                        null,
-                        "Incorrect username or password. Please try again.",
-                        "Login Failed",
-                        JOptionPane.ERROR_MESSAGE
-                    );
+            // Menambahkan window listener untuk menutup aplikasi jika dialog ditutup
+            loginDialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                    System.exit(0); // Menutup aplikasi ketika dialog ditutup
                 }
-            } else {
-                // User pressed Cancel
-                int exitOption = JOptionPane.showConfirmDialog(
-                    null,
-                    "Do you really want to exit?",
-                    "Exit Confirmation",
-                    JOptionPane.YES_NO_OPTION
-                );
+            });
 
-                if (exitOption == JOptionPane.YES_OPTION) {
-                    System.exit(0); // Exit the application
-                }
-            }
+            loginDialog.setVisible(true);
+
+            // Mengembalikan status autentikasi
+            return authenticate;
         }
     }
-    
+
+    private void showRegisterScreen() {
+        JDialog registerDialog = new JDialog((Frame) null, "REGISTER", true);
+
+        JPanel registerPanel = new JPanel() {
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                try {
+                    Image backgroundImage = ImageIO.read(new File("Background.jpg"));
+                    g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+                    // Menambahkan window listener untuk menutup aplikasi jika dialog ditutup
+                    registerDialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                        public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                            System.exit(0); // Menutup aplikasi ketika dialog ditutup
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        registerPanel.setPreferredSize(new Dimension(500, 300));
+        GridBagLayout layout = new GridBagLayout();
+        registerPanel.setLayout(layout);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.CENTER;
+
+        JLabel titleLabel = new JLabel("Register");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 30));
+        titleLabel.setForeground(Color.WHITE);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        layout.setConstraints(titleLabel, gbc);
+        registerPanel.add(titleLabel);
+
+        JLabel usernameLabel = new JLabel("Username:");
+        usernameLabel.setForeground(Color.WHITE);
+        JTextField usernameField = new JTextField(15);
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordLabel.setForeground(Color.WHITE);
+        JPasswordField passwordField = new JPasswordField(15);
+
+        JButton loginButton = new JButton("Login");
+        loginButton.setBackground(new Color(128, 0, 128));
+        loginButton.setForeground(Color.WHITE);
+        JButton saveButton = new JButton("Save");
+        saveButton.setBackground(new Color(128, 0, 128));
+
+        saveButton.setForeground(Color.WHITE);
+
+        gbc.gridwidth = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        layout.setConstraints(usernameLabel, gbc);
+        registerPanel.add(usernameLabel);
+
+        gbc.gridx = 1;
+        layout.setConstraints(usernameField, gbc);
+        registerPanel.add(usernameField);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        layout.setConstraints(passwordLabel, gbc);
+        registerPanel.add(passwordLabel);
+
+        gbc.gridx = 1;
+        layout.setConstraints(passwordField, gbc);
+        registerPanel.add(passwordField);
+
+        // Mengatur ukuran tombol Login dan Register
+        Dimension buttonSize = new Dimension(236, 30); // Ukuran tombol yang seragam
+
+        // Mengatur layout untuk login button (ditempatkan di tengah atas)
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2; // Tombol akan mengambil dua kolom
+        loginButton.setPreferredSize(buttonSize); // Mengatur ukuran tombol login
+        layout.setConstraints(loginButton, gbc);
+        registerPanel.add(loginButton);
+
+        // Mengatur layout untuk register button (ditempatkan di tengah bawah)
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2; // Tombol akan mengambil dua kolom
+        saveButton.setPreferredSize(buttonSize); // Mengatur ukuran tombol register
+        layout.setConstraints(saveButton, gbc);
+        registerPanel.add(saveButton);
+
+        registerDialog.add(registerPanel);
+        registerDialog.pack();
+        registerDialog.setLocationRelativeTo(null);
+
+        // ActionListener untuk tombol Login
+        loginButton.addActionListener(e -> {
+            showLoginScreen();
+            registerDialog.dispose();
+
+        });
+
+        saveButton.addActionListener(e -> {
+            String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
+            if (SaveData(username, password)) {
+                JOptionPane.showMessageDialog(registerDialog, "Registration successful! You can now log in.", "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                registerDialog.dispose();
+                showLoginScreen();
+            } else {
+                JOptionPane.showMessageDialog(registerDialog, "Registration failed. Username might already exist.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        registerDialog.setVisible(true);
+    }
+
+    private boolean SaveData(String username, String password) {
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/game_db", "root", "")) {
+            String checkQuery = "SELECT COUNT(*) FROM users WHERE username = ?";
+            PreparedStatement checkStmt = conn.prepareStatement(checkQuery);
+            checkStmt.setString(1, username);
+
+            ResultSet rs = checkStmt.executeQuery();
+            rs.next();
+            if (rs.getInt(1) > 0) {
+                return false;
+            }
+
+            String insertQuery = "INSERT INTO users (username, password) VALUES (?, ?)";
+            PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
+            insertStmt.setString(1, username);
+            insertStmt.setString(2, password);
+            insertStmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private boolean authenticate(String username, String password) {
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/game_db", "root", "")) {
             String query = "SELECT * FROM users WHERE username = ? AND password = ?";
@@ -420,13 +531,12 @@ public class DreamLife extends JFrame {
             if (rs.next()) {
                 // Muat data atribut karakter
                 character = new Character(
-                    rs.getString("username"), 
-                    rs.getInt("energy"), 
-                    rs.getInt("fullness"), 
-                    rs.getInt("happiness"), 
-                    rs.getInt("strength"), 
-                    rs.getInt("intelligence")
-                );
+                        rs.getString("username"),
+                        rs.getInt("energy"),
+                        rs.getInt("fullness"),
+                        rs.getInt("happiness"),
+                        rs.getInt("strength"),
+                        rs.getInt("intelligence"));
                 return true;
             }
         } catch (SQLException e) {
@@ -510,7 +620,6 @@ public class DreamLife extends JFrame {
             showStrengthEvent();
         }
     }
-    
 
     public static void main(String[] args) {
         new DreamLife();
