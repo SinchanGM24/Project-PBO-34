@@ -88,6 +88,7 @@ public class DreamLife extends JFrame {
                 }
             });
             animationThread.start();
+
             // Stats section
             JPanel statsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
 
@@ -107,14 +108,14 @@ public class DreamLife extends JFrame {
             centerPanel.add(statsPanel, BorderLayout.SOUTH);
             add(centerPanel, BorderLayout.CENTER);
 
-            // Footer: Action buttons
+            // Footer: Action buttons dengan ikon
             JPanel buttonPanel = new JPanel(new GridLayout(2, 3, 10, 10));
-            addGameButton(buttonPanel, "Study");
-            addGameButton(buttonPanel, "Exercise");
-            addGameButton(buttonPanel, "Play");
-            addGameButton(buttonPanel, "Eat");
-            addGameButton(buttonPanel, "Sleep");
-            addGameButton(buttonPanel, "Log out");
+            addGameButton(buttonPanel, "Study", "aksi1.png");
+            addGameButton(buttonPanel, "Exercise", "aksi2.png");
+            addGameButton(buttonPanel, "Play", "aksi3.png");
+            addGameButton(buttonPanel, "Eat", "aksi4.png");
+            addGameButton(buttonPanel, "Sleep", "aksi5.png");
+            addGameButton(buttonPanel, "Log out", "aksi6.png");
 
             add(buttonPanel, BorderLayout.SOUTH);
 
@@ -176,10 +177,16 @@ public class DreamLife extends JFrame {
         return progressBar;
     }
 
-    private void addGameButton(JPanel panel, String action) {
-        JButton button = new JButton(action);
+    private void addGameButton(JPanel panel, String action, String iconFileName) {
+        JButton button = new JButton();
+        ImageIcon originalIcon = new ImageIcon(iconFileName);
+        Image scaledImage = originalIcon.getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
+        button.setIcon(new ImageIcon(scaledImage));
+        button.setToolTipText(action);
+
         panel.add(button);
 
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -208,7 +215,7 @@ public class DreamLife extends JFrame {
                 character.sleep();
                 break;
             case "Log out":
-                dispose(); 
+                dispose();
                 showLoginScreen();
                 break;
         }
