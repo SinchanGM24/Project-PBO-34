@@ -1,4 +1,7 @@
 import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -20,6 +23,9 @@ public class DreamLife extends JFrame {
     private JProgressBar energyBar, fullnessBar, happinessBar, strengthBar, intelligenceBar;
 
     private boolean authenticate = false;
+    private static boolean MusicPlaying = false; 
+    private static Clip musicLogin;
+    private Clip bgm;
 
     private List<ImageIcon> defaultFrames = new ArrayList<>();
     private List<ImageIcon> highStrength20Frames = new ArrayList<>();
@@ -33,29 +39,65 @@ public class DreamLife extends JFrame {
     private List<ImageIcon> currentFrames;
 
     public DreamLife() {
-        // Hanya memulai game jika login berhasil
         if (showLoginScreen()) {
             if (character == null) {
                 JOptionPane.showMessageDialog(this, "Error loading character data. Exiting game.");
                 System.exit(0);
             }
 
+
+            Thread musicThread = new Thread(() -> {
+                try {
+                    // Load dan play musik background
+                    AudioInputStream audioStream = AudioSystem.getAudioInputStream(new File("bgm.wav"));
+                    bgm = AudioSystem.getClip();
+                    bgm.open(audioStream);
+                    bgm.loop(Clip.LOOP_CONTINUOUSLY);  // Memutar musik secara terus-menerus
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            musicThread.start();
+
             // Frame setup
             setTitle("DreamLife");
             setDefaultCloseOperation(EXIT_ON_CLOSE);
             setExtendedState(JFrame.MAXIMIZED_BOTH);
-            setLayout(new BorderLayout());
-            setLocationRelativeTo(null);
+            setLayout(null); // Disable layout to use absolute positioning
 
-            // Center: Character image and stats
-            JPanel centerPanel = new JPanel(new BorderLayout());
-            add(centerPanel, BorderLayout.CENTER);
+            // Layered Pane
+            JLayeredPane layeredPane = new JLayeredPane();
+            layeredPane.setBounds(0, 0, getWidth(), getHeight());
+            add(layeredPane);
 
-            // Label untuk menampilkan gambar animasi
+            // Background setup
+            JLabel backgroundLabel = new JLabel();
+            backgroundLabel.setBounds(0, 0, getWidth(), getHeight());
+            layeredPane.add(backgroundLabel, JLayeredPane.DEFAULT_LAYER);
+            BGame bGame = new BGame(backgroundLabel);
+
+            addComponentListener(new java.awt.event.ComponentAdapter() {
+                @Override
+                public void componentResized(java.awt.event.ComponentEvent evt) {
+                    // Memastikan ukuran label sesuai ukuran frame
+                    backgroundLabel.setBounds(0, 0, getWidth(), getHeight());
+                    bGame.updateBackground(character.getStrength(), character.getIntelligence());
+                }
+            });
+
+            // Content Panel
+            JPanel contentPanel = new JPanel(null);
+            contentPanel.setOpaque(false);
+            contentPanel.setBounds(0, 0, getWidth(), getHeight());
+            layeredPane.add(contentPanel, JLayeredPane.PALETTE_LAYER);
+
+            // Character Image
             JLabel characterImage = new JLabel();
             characterImage.setHorizontalAlignment(SwingConstants.CENTER);
-            centerPanel.add(characterImage, BorderLayout.CENTER);
+            characterImage.setBounds(getWidth() / 4, getHeight() / 4, getWidth() / 2, getHeight() / 2);
+            contentPanel.add(characterImage);
 
+            // Animation
             // List untuk menyimpan frame animasi
             try {
                 loadFrames(defaultFrames, "idel.png", 10);
@@ -63,8 +105,8 @@ public class DreamLife extends JFrame {
                 loadFrames(highIntelligence20Frames, "idel2.png", 10);
                 loadFrames(highStrength40Frames, "idel3.png", 10);
                 loadFrames(highIntelligence40Frames, "idel3.png", 10);
-                loadFrames(highStrength60Frames, "idel4.png", 10);
-                loadFrames(highIntelligence60Frames, "idel4.png", 10);
+                loadFrames(highStrength60Frames, "idel.png", 10);
+                loadFrames(highIntelligence60Frames, "idelpng", 9);
                 loadFrames(highStrength80Frames, "idel5.png", 10);
                 loadFrames(highIntelligence80Frames, "idel6.png", 10);
             } catch (IOException e) {
@@ -73,15 +115,15 @@ public class DreamLife extends JFrame {
 
             currentFrames = defaultFrames;
 
+
             Thread animationThread = new Thread(() -> {
                 int index = 0;
                 while (true) {
-                    updateCurrentFrames();
-                    characterImage.setIcon(currentFrames.get(index));
-                    index = (index + 1) % currentFrames.size();
-
                     try {
-                        Thread.sleep(130);
+                        updateCurrentFrames(); // Pastikan currentFrames diperbarui dengan benar
+                        characterImage.setIcon(currentFrames.get(index));
+                        index = (index + 1) % currentFrames.size(); // Loop animasi
+                        Thread.sleep(130); // Kecepatan animasi
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -89,27 +131,30 @@ public class DreamLife extends JFrame {
             });
             animationThread.start();
 
-            // Stats section
+            // Stats Panel
             JPanel statsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+            statsPanel.setOpaque(false);
+            statsPanel.setBounds(20, getHeight() - 200, getWidth() - 40, 100);
 
             energyBar = createProgressBar("Energy", character.getEnergy());
-            fullnessBar = createProgressBar("Fullness", character.getFullness());
-            happinessBar = createProgressBar("Happiness", character.getHappiness());
             strengthBar = createProgressBar("Strength", character.getStrength());
+            fullnessBar = createProgressBar("Fullness", character.getFullness());
             intelligenceBar = createProgressBar("Intelligence", character.getIntelligence());
+            happinessBar = createProgressBar("Happiness", character.getHappiness());
 
             statsPanel.add(createStatPanel("Energy", energyBar));
             statsPanel.add(createStatPanel("Strength", strengthBar));
             statsPanel.add(createStatPanel("Fullness", fullnessBar));
             statsPanel.add(createStatPanel("Intelligence", intelligenceBar));
             statsPanel.add(createStatPanel("Happiness", happinessBar));
-            statsPanel.add(new JLabel()); // Empty placeholder for layout symmetry
+            statsPanel.add(new JLabel());
 
-            centerPanel.add(statsPanel, BorderLayout.SOUTH);
-            add(centerPanel, BorderLayout.CENTER);
+            contentPanel.add(statsPanel);
 
-            // Footer: Action buttons dengan ikon
+            // Button Panel
             JPanel buttonPanel = new JPanel(new GridLayout(2, 3, 10, 10));
+            buttonPanel.setOpaque(false);
+            buttonPanel.setBounds(20, getHeight() - 100, getWidth() - 40, 80);
             addGameButton(buttonPanel, "Study", "aksi1.png");
             addGameButton(buttonPanel, "Exercise", "aksi2.png");
             addGameButton(buttonPanel, "Play", "aksi3.png");
@@ -117,12 +162,23 @@ public class DreamLife extends JFrame {
             addGameButton(buttonPanel, "Sleep", "aksi5.png");
             addGameButton(buttonPanel, "Log out", "aksi6.png");
 
-            add(buttonPanel, BorderLayout.SOUTH);
+            contentPanel.add(buttonPanel);
 
             setVisible(true);
+
+            // Adjust layout on resize
+            addComponentListener(new java.awt.event.ComponentAdapter() {
+                public void componentResized(java.awt.event.ComponentEvent evt) {
+                    layeredPane.setBounds(0, 0, getWidth(), getHeight());
+                    backgroundLabel.setBounds(0, 0, 1600, 590);
+                    contentPanel.setBounds(0, 0, getWidth(), getHeight());
+                    statsPanel.setBounds(10, getHeight() - 245, getWidth() - 40, 120);
+                    buttonPanel.setBounds(10, getHeight() - 125, getWidth() - 40, 80);
+                    characterImage.setBounds(getWidth() / 4, getHeight() / 4, getWidth() / 2, getHeight() / 2);
+                }
+            });
         }
     }
-
     private void loadFrames(List<ImageIcon> frames, String filePath, int frameCount) throws IOException {
         BufferedImage spriteSheet = ImageIO.read(new File(filePath));
         int frameWidth = spriteSheet.getWidth() / frameCount;
@@ -183,10 +239,8 @@ public class DreamLife extends JFrame {
         Image scaledImage = originalIcon.getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
         button.setIcon(new ImageIcon(scaledImage));
         button.setToolTipText(action);
-
         panel.add(button);
 
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -215,8 +269,9 @@ public class DreamLife extends JFrame {
                 character.sleep();
                 break;
             case "Log out":
-                dispose();
-                showLoginScreen();
+                dispose(); 
+                stopGameMusic();
+                new DreamLife();
                 break;
         }
 
@@ -264,6 +319,10 @@ public class DreamLife extends JFrame {
 
     public boolean showLoginScreen() {
         while (true) {
+            if (!MusicPlaying) {
+                playMusic();  // Memulai musik jika belum diputar
+            }
+
             JDialog loginDialog = new JDialog((Frame) null, "LOGIN", true); // Modal dialog
 
             JPanel loginPanel = new JPanel() {
@@ -358,6 +417,7 @@ public class DreamLife extends JFrame {
                     JOptionPane.showMessageDialog(loginDialog, "Login successful!", "Success",
                             JOptionPane.INFORMATION_MESSAGE);
                     loginDialog.dispose();
+                    stopLoginMusic();
                     authenticate = true; // Status autentikasi berhasil
                 } else {
                     JOptionPane.showMessageDialog(loginDialog, "Invalid username or password.", "Error",
@@ -481,8 +541,8 @@ public class DreamLife extends JFrame {
 
         // ActionListener untuk tombol Login
         loginButton.addActionListener(e -> {
-            showLoginScreen();
             registerDialog.dispose();
+            new DreamLife();
 
         });
 
@@ -493,7 +553,7 @@ public class DreamLife extends JFrame {
                 JOptionPane.showMessageDialog(registerDialog, "Registration successful! You can now log in.", "Success",
                         JOptionPane.INFORMATION_MESSAGE);
                 registerDialog.dispose();
-                showLoginScreen();
+                new DreamLife();
             } else {
                 JOptionPane.showMessageDialog(registerDialog, "Registration failed. Username might already exist.",
                         "Error", JOptionPane.ERROR_MESSAGE);
@@ -502,6 +562,7 @@ public class DreamLife extends JFrame {
 
         registerDialog.setVisible(true);
     }
+
 
     private boolean SaveData(String username, String password) {
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/game_db", "root", "")) {
@@ -627,6 +688,34 @@ public class DreamLife extends JFrame {
             showStrengthEvent();
         }
     }
+        // Fungsi untuk memutar musik latar
+        private void playMusic() {
+            try {
+                AudioInputStream audioStream = AudioSystem.getAudioInputStream(new File("bgml.wav"));
+                musicLogin = AudioSystem.getClip();
+                musicLogin.open(audioStream);
+                musicLogin.loop(Clip.LOOP_CONTINUOUSLY);  // Musik berulang
+                MusicPlaying = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        // Menghentikan musik login
+        private void stopLoginMusic() {
+            if (musicLogin != null && musicLogin.isRunning()) {
+                musicLogin.stop();  // Hentikan musik login
+                MusicPlaying = false; 
+            }
+        }
+    
+        // Menghentikan musik permainan
+        private void stopGameMusic() {
+            if (bgm != null && bgm.isRunning()) {
+                bgm.stop();  // Hentikan musik permainan
+            }
+        }
 
     public static void main(String[] args) {
         new DreamLife();

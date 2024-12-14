@@ -48,6 +48,13 @@ public class Character {
 
     public void saveToDatabase() {
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/game_db", "root", "")) {
+            // Membatasi nilai maksimal 100
+            energy = Math.min(energy, 100);
+            fullness = Math.min(fullness, 100);
+            happiness = Math.min(happiness, 100);
+            strength = Math.min(strength, 100);
+            intelligence = Math.min(intelligence, 100);
+    
             String query = "UPDATE users SET energy = ?, fullness = ?, happiness = ?, strength = ?, intelligence = ? WHERE username = ?";
             PreparedStatement stmt = conn.prepareStatement(query);
             stmt.setInt(1, energy);
@@ -61,6 +68,7 @@ public class Character {
             System.out.println("Failed to save data: " + e.getMessage());
         }
     }
+    
 
     public void resetCharacter() {
         // Set nilai awal
