@@ -76,14 +76,22 @@ public class DreamLife extends JFrame {
             layeredPane.add(backgroundLabel, JLayeredPane.DEFAULT_LAYER);
             BGame bGame = new BGame(backgroundLabel);
 
-            addComponentListener(new java.awt.event.ComponentAdapter() {
-                @Override
-                public void componentResized(java.awt.event.ComponentEvent evt) {
-                    // Memastikan ukuran label sesuai ukuran frame
-                    backgroundLabel.setBounds(0, 0, getWidth(), getHeight());
-                    bGame.updateBackground(character.getStrength(), character.getIntelligence());
+            Thread backgroundThread = new Thread(() -> {
+                while (true) {
+                    try {
+                        SwingUtilities.invokeLater(() -> {
+                            // Memanggil updateBackground tanpa perlu memeriksa syarat secara terpisah
+                            bGame.updateBackground(character.getStrength(), character.getIntelligence());
+                        });
+                        Thread.sleep(500); // Interval pembaruan (sesuaikan dengan kebutuhan)
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        break; // Keluar dari loop jika thread diinterupsi
+                    }
                 }
             });
+            backgroundThread.start();
+            
 
             // Content Panel
             JPanel contentPanel = new JPanel(null);

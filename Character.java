@@ -3,18 +3,23 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class Character {
-    private String name; // Nama juga digunakan sebagai username di database
-    private int energy, fullness, happiness, strength, intelligence;
+interface Savable {
+    void saveToDatabase();
+    void resetCharacter();
+}
+
+public class Character extends Basecharacter implements Savable {
 
     public Character(String name, int energy, int fullness, int happiness, int strength, int intelligence) {
-        this.name = name;
+        super(name);
         this.energy = Math.min(energy, 100);
         this.fullness = Math.min(fullness, 100);
         this.happiness = Math.min(happiness, 100);
         this.strength = Math.min(strength, 100);
         this.intelligence = Math.min(intelligence, 100);
     }
+
+
 
     public void study() {
         intelligence += 1;
@@ -46,6 +51,7 @@ public class Character {
         happiness += 5;
     }
 
+    @Override
     public void saveToDatabase() {
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/game_db", "root", "")) {
             // Membatasi nilai maksimal 100
@@ -70,6 +76,7 @@ public class Character {
     }
     
 
+    @Override
     public void resetCharacter() {
         // Set nilai awal
         energy = 100;
@@ -77,21 +84,7 @@ public class Character {
         happiness = 100;
         strength = 0;
         intelligence = 0;
-    
-        // Simpan nilai awal ke database
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/game_db", "root", "")) {
-            String query = "UPDATE users SET energy = ?, fullness = ?, happiness = ?, strength = ?, intelligence = ? WHERE username = ?";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setInt(1, energy);
-            stmt.setInt(2, fullness);
-            stmt.setInt(3, happiness);
-            stmt.setInt(4, strength);
-            stmt.setInt(5, intelligence);
-            stmt.setString(6, name); // Username sebagai identifier
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println("Failed to reset character: " + e.getMessage());
-        }
+        saveToDatabase();
     }
     public void setStrength(int strength) {
         this.strength = strength;
@@ -100,6 +93,8 @@ public class Character {
     public void setIntelligence(int intelligence) {
         this.intelligence = intelligence;
     }
+
+
 
     public int getEnergy() { return energy; }
     public int getFullness() { return fullness; }
