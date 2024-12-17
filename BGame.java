@@ -23,12 +23,12 @@ public class BGame {
 
     private void loadBackgrounds() {
         try {
-            defaultBackgrounds.add(new ImageIcon("Background.jpg"));
-            highStrength20Backgrounds.add(new ImageIcon("strength20_bg.png"));
-            highIntelligence20Backgrounds.add(new ImageIcon("intelligence20_bg.png"));
-            highStrength40Backgrounds.add(new ImageIcon("strength40_bg.png"));
+            defaultBackgrounds.add(new ImageIcon("bg4.jpg"));
+            highStrength20Backgrounds.add(new ImageIcon("Background.jpg"));
+            highIntelligence20Backgrounds.add(new ImageIcon("bg2.png"));
+            highStrength40Backgrounds.add(new ImageIcon("bg4.png"));
             highIntelligence40Backgrounds.add(new ImageIcon("intelligence40_bg.png"));
-            highStrength60Backgrounds.add(new ImageIcon("strength60_bg.png"));
+            highStrength60Backgrounds.add(new ImageIcon("bg6.png"));
             highIntelligence60Backgrounds.add(new ImageIcon("intelligence60_bg.png"));
             highStrength80Backgrounds.add(new ImageIcon("strength80_bg.png"));
             highIntelligence80Backgrounds.add(new ImageIcon("intelligence80_bg.png"));
@@ -37,6 +37,8 @@ public class BGame {
             System.err.println("Error loading backgrounds!");
         }
     }
+
+    
 
     public void updateBackground(int strength, int intelligence) {
         ImageIcon selectedIcon;
